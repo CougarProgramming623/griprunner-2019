@@ -11,26 +11,36 @@ void GripPipeline::Process(cv::Mat& source0){
 	//Step RGB_Threshold0:
 	//input
 	cv::Mat rgbThresholdInput = source0;
-	double rgbThresholdRed[] = {0.0, 15.0};
-	double rgbThresholdGreen[] = {18.0, 41.0};
-	double rgbThresholdBlue[] = {0.0, 34.0};
+	//double rgbThresholdRed[] = {0.0, 110.15693909553059};
+	double rgbThresholdRed[] = {0.0, 0.0};
+	double rgbThresholdGreen[] = {69.0, 255.0};
+	double rgbThresholdBlue[] = {0.0, 255.0};
 	rgbThreshold(rgbThresholdInput, rgbThresholdRed, rgbThresholdGreen, rgbThresholdBlue, this->rgbThresholdOutput);
+	//Step CV_erode0:
+	//input
+	cv::Mat cvErodeSrc = rgbThresholdOutput;
+	cv::Mat cvErodeKernel;
+	cv::Point cvErodeAnchor(-1, -1);
+	double cvErodeIterations = 1.0;  // default Double
+    int cvErodeBordertype = cv::BORDER_CONSTANT;
+	cv::Scalar cvErodeBordervalue(-1);
+	cvErode(cvErodeSrc, cvErodeKernel, cvErodeAnchor, cvErodeIterations, cvErodeBordertype, cvErodeBordervalue, this->cvErodeOutput);
 	//Step Find_Contours0:
 	//input
-	cv::Mat findContoursInput = rgbThresholdOutput;
-	bool findContoursExternalOnly = false;  // default Boolean
+	cv::Mat findContoursInput = cvErodeOutput;
+	bool findContoursExternalOnly = true;  // default Boolean
 	findContours(findContoursInput, findContoursExternalOnly, this->findContoursOutput);
 	//Step Filter_Contours0:
 	//input
 	std::vector<std::vector<cv::Point> > filterContoursContours = findContoursOutput;
-	double filterContoursMinArea = 1000.0;  // default Double
+	double filterContoursMinArea = 600.0;  // default Double
 	double filterContoursMinPerimeter = 0.0;  // default Double
-	double filterContoursMinWidth = 0.0;  // default Double
-	double filterContoursMaxWidth = 1000.0;  // default Double
-	double filterContoursMinHeight = 0.0;  // default Double
-	double filterContoursMaxHeight = 1000.0;  // default Double
-	double filterContoursSolidity[] = {0, 100};
-	double filterContoursMaxVertices = 1000000.0;  // default Double
+	double filterContoursMinWidth = 10.0;  // default Double
+	double filterContoursMaxWidth = 200.0;  // default Double
+	double filterContoursMinHeight = 50.0;  // default Double
+	double filterContoursMaxHeight = 900.0;  // default Double
+	double filterContoursSolidity[] = {62.310949644029904, 100};
+	double filterContoursMaxVertices = 99999.0;  // default Double
 	double filterContoursMinVertices = 0.0;  // default Double
 	double filterContoursMinRatio = 0.0;  // default Double
 	double filterContoursMaxRatio = 1000.0;  // default Double
@@ -43,6 +53,13 @@ void GripPipeline::Process(cv::Mat& source0){
  */
 cv::Mat* GripPipeline::GetRgbThresholdOutput(){
 	return &(this->rgbThresholdOutput);
+}
+/**
+ * This method is a generated getter for the output of a CV_erode.
+ * @return Mat output from CV_erode.
+ */
+cv::Mat* GripPipeline::GetCvErodeOutput(){
+	return &(this->cvErodeOutput);
 }
 /**
  * This method is a generated getter for the output of a Find_Contours.
@@ -70,6 +87,20 @@ std::vector<std::vector<cv::Point> >* GripPipeline::GetFilterContoursOutput(){
 	void GripPipeline::rgbThreshold(cv::Mat &input, double red[], double green[], double blue[], cv::Mat &output) {
 		cv::cvtColor(input, output, cv::COLOR_BGR2RGB);
 		cv::inRange(output, cv::Scalar(red[0], green[0], blue[0]), cv::Scalar(red[1], green[1], blue[1]), output);
+	}
+
+	/**
+	 * Expands area of lower value in an image.
+	 * @param src the Image to erode.
+	 * @param kernel the kernel for erosion.
+	 * @param anchor the center of the kernel.
+	 * @param iterations the number of times to perform the erosion.
+	 * @param borderType pixel extrapolation method.
+	 * @param borderValue value to be used for a constant border.
+	 * @param dst Output Image.
+	 */
+	void GripPipeline::cvErode(cv::Mat &src, cv::Mat &kernel, cv::Point &anchor, double iterations, int borderType, cv::Scalar &borderValue, cv::Mat &dst) {
+		cv::erode(src, dst, kernel, anchor, (int)iterations, borderType, borderValue);
 	}
 
 	/**

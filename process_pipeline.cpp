@@ -40,7 +40,7 @@ std::shared_ptr<nt::NetworkTable>
 start_networktables(void)
 {
 	auto inst = nt::NetworkTableInstance::GetDefault();
-	inst.StartClient("moonlight.local");
+	inst.StartClient("roborio-623-frc.local");
 	return inst.GetTable("vision");
 }
 
