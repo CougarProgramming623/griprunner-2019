@@ -13,6 +13,7 @@ void GripPipeline::Process(cv::Mat& source0){
 	cv::Mat rgbThresholdInput = source0;
 	//double rgbThresholdRed[] = {0.0, 110.15693909553059};
 	double rgbThresholdRed[] = {0.0, 0.0};
+	//double rgbThresholdGreen[] = {67.23163040344325, 192.95895779166136};
 	double rgbThresholdGreen[] = {69.0, 255.0};
 	double rgbThresholdBlue[] = {0.0, 255.0};
 	rgbThreshold(rgbThresholdInput, rgbThresholdRed, rgbThresholdGreen, rgbThresholdBlue, this->rgbThresholdOutput);
