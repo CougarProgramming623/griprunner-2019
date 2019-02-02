@@ -54,7 +54,7 @@ main(int argc, char **argv)
 	CURLcode res;
 	CURL *h = NULL;
 	std::shared_ptr<nt::NetworkTable> vision_table;
-	std::vector<double> center_x, center_y, width, height;
+	std::vector<double> center_x, center_y, width, height, angle;
 
 	h = curl_easy_init();
 	if (NULL == h) {
@@ -86,13 +86,14 @@ main(int argc, char **argv)
 		gp.Process(cvimg);
 		std::vector<std::vector<cv::Point>> *out = gp.GetFilterContoursOutput();
 		for (std::vector<cv::Point> contour: *out) {
-			cv::Rect bb = boundingRect(contour);
-			center_x.push_back(bb.x + bb.width / 2);
-			center_y.push_back(bb.y + bb.height / 2);
-			width.push_back(bb.width);
-			height.push_back(bb.height);
-			printf("x: %d, y: %d, h: %d, w: %d\n", bb.x + bb.width / 2,
-			  bb.y + bb.height / 2, bb.height, bb.width);
+			cv::RotatedRect bb = minAreaRect(contour);
+			center_x.push_back(bb.center.x);
+			center_y.push_back(bb.center.y);
+			width.push_back(bb.size.width);
+			height.push_back(bb.size.height);
+			angle.push_back(bb.angle);
+			//printf("x: %d, y: %d, h: %d, w: %d\n", bb.x + bb.width / 2,
+			 // bb.y + bb.height / 2, bb.height, bb.width);
 		}
 		vision_table.get()->PutNumberArray("centerX",
 		  llvm::ArrayRef<double>(center_x));
@@ -102,10 +103,13 @@ main(int argc, char **argv)
 		  llvm::ArrayRef<double>(width));
 		vision_table.get()->PutNumberArray("height",
 		  llvm::ArrayRef<double>(height));
+		vision_table.get()->PutNumberArray("angle",
+		  llvm::ArrayRef<double>(angle));
 		vision_table.get()->GetInstance().Flush();
 		center_x.clear();
 		center_y.clear();
 		width.clear();
 		height.clear();
+		angle.clear();
 	}
 }

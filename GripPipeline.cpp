@@ -8,59 +8,41 @@ GripPipeline::GripPipeline() {
 * Runs an iteration of the pipeline and updates outputs.
 */
 void GripPipeline::Process(cv::Mat& source0){
-	//Step RGB_Threshold0:
+	//Step HSV_Threshold0:
 	//input
-	cv::Mat rgbThresholdInput = source0;
-	//double rgbThresholdRed[] = {0.0, 110.15693909553059};
-	double rgbThresholdRed[] = {0.0, 0.0};
-	//double rgbThresholdGreen[] = {67.23163040344325, 192.95895779166136};
-	double rgbThresholdGreen[] = {69.0, 255.0};
-	double rgbThresholdBlue[] = {0.0, 255.0};
-	rgbThreshold(rgbThresholdInput, rgbThresholdRed, rgbThresholdGreen, rgbThresholdBlue, this->rgbThresholdOutput);
-	//Step CV_erode0:
-	//input
-	cv::Mat cvErodeSrc = rgbThresholdOutput;
-	cv::Mat cvErodeKernel;
-	cv::Point cvErodeAnchor(-1, -1);
-	double cvErodeIterations = 1.0;  // default Double
-    int cvErodeBordertype = cv::BORDER_CONSTANT;
-	cv::Scalar cvErodeBordervalue(-1);
-	cvErode(cvErodeSrc, cvErodeKernel, cvErodeAnchor, cvErodeIterations, cvErodeBordertype, cvErodeBordervalue, this->cvErodeOutput);
+	cv::Mat hsvThresholdInput = source0;
+	double hsvThresholdHue[] = {33.99280575539568, 93.99317406143345};
+	double hsvThresholdSaturation[] = {100.89928057553958, 255.0};
+	double hsvThresholdValue[] = {169.69424460431654, 255.0};
+	hsvThreshold(hsvThresholdInput, hsvThresholdHue, hsvThresholdSaturation, hsvThresholdValue, this->hsvThresholdOutput);
 	//Step Find_Contours0:
 	//input
-	cv::Mat findContoursInput = cvErodeOutput;
-	bool findContoursExternalOnly = true;  // default Boolean
+	cv::Mat findContoursInput = hsvThresholdOutput;
+	bool findContoursExternalOnly = false;  // default Boolean
 	findContours(findContoursInput, findContoursExternalOnly, this->findContoursOutput);
 	//Step Filter_Contours0:
 	//input
 	std::vector<std::vector<cv::Point> > filterContoursContours = findContoursOutput;
-	double filterContoursMinArea = 600.0;  // default Double
-	double filterContoursMinPerimeter = 0.0;  // default Double
-	double filterContoursMinWidth = 10.0;  // default Double
-	double filterContoursMaxWidth = 200.0;  // default Double
-	double filterContoursMinHeight = 50.0;  // default Double
-	double filterContoursMaxHeight = 900.0;  // default Double
-	double filterContoursSolidity[] = {62.310949644029904, 100};
-	double filterContoursMaxVertices = 99999.0;  // default Double
-	double filterContoursMinVertices = 0.0;  // default Double
-	double filterContoursMinRatio = 0.0;  // default Double
-	double filterContoursMaxRatio = 1000.0;  // default Double
+	double filterContoursMinArea = 0;  // default Double
+	double filterContoursMinPerimeter = 100.0;  // default Double
+	double filterContoursMinWidth = 0;  // default Double
+	double filterContoursMaxWidth = 1000;  // default Double
+	double filterContoursMinHeight = 0;  // default Double
+	double filterContoursMaxHeight = 1000;  // default Double
+	double filterContoursSolidity[] = {0, 100};
+	double filterContoursMaxVertices = 1000000;  // default Double
+	double filterContoursMinVertices = 0;  // default Double
+	double filterContoursMinRatio = 0;  // default Double
+	double filterContoursMaxRatio = 1000;  // default Double
 	filterContours(filterContoursContours, filterContoursMinArea, filterContoursMinPerimeter, filterContoursMinWidth, filterContoursMaxWidth, filterContoursMinHeight, filterContoursMaxHeight, filterContoursSolidity, filterContoursMaxVertices, filterContoursMinVertices, filterContoursMinRatio, filterContoursMaxRatio, this->filterContoursOutput);
 }
 
 /**
- * This method is a generated getter for the output of a RGB_Threshold.
- * @return Mat output from RGB_Threshold.
+ * This method is a generated getter for the output of a HSV_Threshold.
+ * @return Mat output from HSV_Threshold.
  */
-cv::Mat* GripPipeline::GetRgbThresholdOutput(){
-	return &(this->rgbThresholdOutput);
-}
-/**
- * This method is a generated getter for the output of a CV_erode.
- * @return Mat output from CV_erode.
- */
-cv::Mat* GripPipeline::GetCvErodeOutput(){
-	return &(this->cvErodeOutput);
+cv::Mat* GripPipeline::GetHsvThresholdOutput(){
+	return &(this->hsvThresholdOutput);
 }
 /**
  * This method is a generated getter for the output of a Find_Contours.
@@ -77,31 +59,17 @@ std::vector<std::vector<cv::Point> >* GripPipeline::GetFilterContoursOutput(){
 	return &(this->filterContoursOutput);
 }
 	/**
-	 * Segment an image based on color ranges.
+	 * Segment an image based on hue, saturation, and value ranges.
 	 *
-	 * @param input The image on which to perform the RGB threshold.
-	 * @param red The min and max red.
-	 * @param green The min and max green.
-	 * @param blue The min and max blue.
+	 * @param input The image on which to perform the HSL threshold.
+	 * @param hue The min and max hue.
+	 * @param sat The min and max saturation.
+	 * @param val The min and max value.
 	 * @param output The image in which to store the output.
 	 */
-	void GripPipeline::rgbThreshold(cv::Mat &input, double red[], double green[], double blue[], cv::Mat &output) {
-		cv::cvtColor(input, output, cv::COLOR_BGR2RGB);
-		cv::inRange(output, cv::Scalar(red[0], green[0], blue[0]), cv::Scalar(red[1], green[1], blue[1]), output);
-	}
-
-	/**
-	 * Expands area of lower value in an image.
-	 * @param src the Image to erode.
-	 * @param kernel the kernel for erosion.
-	 * @param anchor the center of the kernel.
-	 * @param iterations the number of times to perform the erosion.
-	 * @param borderType pixel extrapolation method.
-	 * @param borderValue value to be used for a constant border.
-	 * @param dst Output Image.
-	 */
-	void GripPipeline::cvErode(cv::Mat &src, cv::Mat &kernel, cv::Point &anchor, double iterations, int borderType, cv::Scalar &borderValue, cv::Mat &dst) {
-		cv::erode(src, dst, kernel, anchor, (int)iterations, borderType, borderValue);
+	void GripPipeline::hsvThreshold(cv::Mat &input, double hue[], double sat[], double val[], cv::Mat &out) {
+		cv::cvtColor(input, out, cv::COLOR_BGR2HSV);
+		cv::inRange(out,cv::Scalar(hue[0], sat[0], val[0]), cv::Scalar(hue[1], sat[1], val[1]), out);
 	}
 
 	/**
